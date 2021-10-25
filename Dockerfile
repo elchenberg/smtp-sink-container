@@ -44,6 +44,22 @@ USER 65534:65534
 ENTRYPOINT [ "tini", "--", "smtp-sink" ]
 CMD [ "-c", "-v", "0.0.0.0:1025" , "128" ]
 
+FROM busybox:1.33.1-uclibc AS test-stage
+SHELL [ "/bin/ash", "-o", "errexit", "-o", "nounset" , "-o", "pipefail", "-o", "xtrace", "-c" ]
+COPY --from=build-stage /rootfs /
+USER 65534:65534
+# 1. start smtp-sink in a subprocess
+# 2. wait until the port is open (up to a 1 second)
+# 3. send a test email
+RUN (tini -s -- smtp-sink 0.0.0.0:1025 128 &); \
+    for _ in seq 1 10; do nc -vz 127.0.0.1 1025 && break; sleep 0.1; done; \
+    printf 'From: sender@localhost\nTo: recipient@localhost\nSubject: Test\n\nTest' | sendmail -f sender@localhost -S 127.0.0.1:1025 -t -v
+# same as above, but this time the test email gets dumped to a file
+RUN (tini -s -- smtp-sink -d "/tmp/smtp-sink/%M" 0.0.0.0:1025 128 &); \
+    for _ in seq 1 10; do nc -vz 127.0.0.1 1025 && break; sleep 0.1; done; \
+    printf 'From: sender@localhost\nTo: recipient@localhost\nSubject: Test\n\nTest' | sendmail -f sender@localhost -S 127.0.0.1:1025 -t -v; \
+    grep -lr 'Subject: Test' /tmp/smtp-sink | xargs -t cat
+
 FROM alpine:3.14.2 AS alpine
 COPY --from=build-stage /rootfs /
 USER 65534:65534
