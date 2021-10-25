@@ -7,10 +7,10 @@ RUN apt-get update; \
     ca-certificates \
     gnupg \
     wget \
-    gcc \
     libc6-dev \
     m4 \
     make \
+    musl-tools \
     ;
 
 ENV POSTFIX_VERSION=3.6.2 \
@@ -23,13 +23,16 @@ RUN wget --quiet "https://de.postfix.org/ftpmirror/official/postfix-${POSTFIX_VE
     gpg --batch --verify "postfix-${POSTFIX_VERSION:?}.tar.gz.gpg2" "postfix-${POSTFIX_VERSION:?}.tar.gz"; \
     tar xzf "postfix-${POSTFIX_VERSION:?}.tar.gz"
 
-RUN CC="gcc -static -static-libgcc -static-libstdc++ -D_FORTIFY_SOURCE=2 -fPIE -fstack-protector-strong -pie -Wl,-z,relro,-z,now"; \
-    make --directory="postfix-${POSTFIX_VERSION:?}" --silent makefiles CC="${CC:?}" CCARGS="-DNO_DB -DNO_NIS -DNO_PCRE" OPT="-O3"; \
+RUN CC="musl-gcc -static -static-libgcc -static-libstdc++ -D_FORTIFY_SOURCE=2 -fPIE -fstack-protector-strong -pie -Wl,-z,relro,-z,now -ffunction-sections -fdata-sections -Wl,--gc-sections -s"; \
+    make --directory="postfix-${POSTFIX_VERSION:?}" --silent makefiles CC="${CC:?}" CCARGS="-DNO_DB -DNO_NIS -DNO_PCRE" OPT="-Ofast"; \
+    mkdir -p /usr/include/x86_64-linux-musl/linux; \
+    ln -s /usr/include/linux/version.h /usr/include/x86_64-linux-musl/linux/version.h; \
+    ln -s /usr/lib/x86_64-linux-gnu/libnsl.a /usr/lib/x86_64-linux-musl/libnsl.a; \
+    sed -i'' 's/^\(#include <sys_defs.h>\)$/\1\n#include <stdio.h>/' "postfix-${POSTFIX_VERSION:?}/src/posttls-finger/posttls-finger.c"; \
     make --directory="postfix-${POSTFIX_VERSION:?}" --silent; \
     install -Dm 755 "postfix-${POSTFIX_VERSION:?}/bin/smtp-sink" /usr/local/bin/smtp-sink; \
     install -Dm 755 "postfix-${POSTFIX_VERSION:?}/bin/smtp-sink" /rootfs/usr/local/bin/smtp-sink
 
-# Apparently smtp-sink ignores stop signals when it has the PID 1.
 ENV TINI_VERSION=0.19.0 \
     TINI_KEY_FINGERPRINT=595E85A6B1B4779EA4DAAEC70B588DFF0527A9B7
 RUN wget --quiet "https://github.com/krallin/tini/releases/download/v${TINI_VERSION}/tini-static-amd64.asc"; \
