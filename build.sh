@@ -40,6 +40,7 @@ buildctl-daemonless.sh build \
   --opt "platform=${PLATFORMS:?}" \
   --opt "target=${TARGET_BUSYBOX:?}" \
   --output "type=image,name=${IMAGE_NAME:?}:${POSTFIX_VERSION:?}-${TARGET_BUSYBOX:?},push=${PUSH:?}"
+buildctl-daemonless.sh prune
 
 buildctl-daemonless.sh build \
   --export-cache "dest=${PWD:?}/.cache,type=local" \
@@ -55,3 +56,4 @@ buildctl-daemonless.sh build \
   --opt "platform=${PLATFORMS:?}" \
   --opt "target=${TARGET_DISTROLESS:?}" \
   --output "type=image,name=${IMAGE_NAME:?}:${POSTFIX_VERSION:?},push=${PUSH:?}"
+buildctl-daemonless.sh prune
