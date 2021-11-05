@@ -27,7 +27,7 @@ PLATFORMS=${PLATFORMS:-linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm
 PUSH=${PUSH:-false}
 
 buildctl-daemonless.sh build \
-  --export-cache "dest=${PWD:?}/.cache,type=local" \
+  --export-cache "dest=${PWD:?}/.cache,mode=max,type=local" \
   --frontend "dockerfile.v0" \
   --import-cache "src=${PWD:?}/.cache,type=local" \
   --local "context=${PWD:?}" \
@@ -43,7 +43,7 @@ buildctl-daemonless.sh build \
 buildctl-daemonless.sh prune
 
 buildctl-daemonless.sh build \
-  --export-cache "dest=${PWD:?}/.cache,type=local" \
+  --export-cache "dest=${PWD:?}/.cache,mode=max,type=local" \
   --frontend "dockerfile.v0" \
   --import-cache "src=${PWD:?}/.cache,type=local" \
   --local "context=${PWD:?}" \
