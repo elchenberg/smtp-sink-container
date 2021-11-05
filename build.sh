@@ -48,8 +48,9 @@ done
 build
 
 buildctl-daemonless.sh build \
-  --export-cache "mode=max,type=local" \
+  --export-cache "dest=${PWD:?}/.cache,type=local" \
   --frontend "dockerfile.v0" \
+  --import-cache "src=${PWD:?}/.cache,type=local" \
   --local "context=${PWD:?}" \
   --local "dockerfile=${PWD:?}" \
   --opt "build-arg:BUSYBOX_VERSION=${BUSYBOX_VERSION:?}" \
