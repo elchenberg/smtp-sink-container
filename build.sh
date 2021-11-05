@@ -26,27 +26,6 @@ PLATFORMS=${PLATFORMS:-linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm
 
 PUSH=${PUSH:-false}
 
-build() {
-  buildctl-daemonless.sh build \
-    --export-cache "dest=${PWD:?}/.cache,type=local" \
-    --frontend "dockerfile.v0" \
-    --import-cache "src=${PWD:?}/.cache,type=local" \
-    --local "context=${PWD:?}" \
-    --local "dockerfile=${PWD:?}" \
-    --opt "build-arg:BUSYBOX_VERSION=${BUSYBOX_VERSION:?}" \
-    --opt "build-arg:DEBIAN_VERSION=${DEBIAN_VERSION:?}" \
-    --opt "build-arg:POSTFIX_VERSION=${POSTFIX_VERSION:?}" \
-    --opt "build-arg:TINI_VERSION=${TINI_VERSION}" \
-    --opt "filename=Dockerfile" \
-    --opt "platform=${PLATFORMS:?}" \
-    --opt "target=${TARGET_DISTROLESS:?}" \
-    --output "type=image,name=${IMAGE_NAME:?}:${POSTFIX_VERSION:?},push=${PUSH:?}"
-}
-for PLATFORM in $(echo "${PLATFORMS:?}" | tr ',' ' '); do
-  PLATFORMS="${PLATFORM:?}" PUSH=false build
-done
-build
-
 buildctl-daemonless.sh build \
   --export-cache "dest=${PWD:?}/.cache,type=local" \
   --frontend "dockerfile.v0" \
@@ -61,3 +40,18 @@ buildctl-daemonless.sh build \
   --opt "platform=${PLATFORMS:?}" \
   --opt "target=${TARGET_BUSYBOX:?}" \
   --output "type=image,name=${IMAGE_NAME:?}:${POSTFIX_VERSION:?}-${TARGET_BUSYBOX:?},push=${PUSH:?}"
+
+buildctl-daemonless.sh build \
+  --export-cache "dest=${PWD:?}/.cache,type=local" \
+  --frontend "dockerfile.v0" \
+  --import-cache "src=${PWD:?}/.cache,type=local" \
+  --local "context=${PWD:?}" \
+  --local "dockerfile=${PWD:?}" \
+  --opt "build-arg:BUSYBOX_VERSION=${BUSYBOX_VERSION:?}" \
+  --opt "build-arg:DEBIAN_VERSION=${DEBIAN_VERSION:?}" \
+  --opt "build-arg:POSTFIX_VERSION=${POSTFIX_VERSION:?}" \
+  --opt "build-arg:TINI_VERSION=${TINI_VERSION}" \
+  --opt "filename=Dockerfile" \
+  --opt "platform=${PLATFORMS:?}" \
+  --opt "target=${TARGET_DISTROLESS:?}" \
+  --output "type=image,name=${IMAGE_NAME:?}:${POSTFIX_VERSION:?},push=${PUSH:?}"
